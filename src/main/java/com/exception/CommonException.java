@@ -1,9 +1,9 @@
 package com.exception;
 
-public class CommonExeption extends Exception {
+public class CommonException extends Exception {
     private String desc;
 
-    public CommonExeption(String desc) {
+    public CommonException(String desc) {
         super();
         this.desc = desc;
     }

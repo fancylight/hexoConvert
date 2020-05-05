@@ -1,16 +1,14 @@
 package com.service;
 
-import com.exception.CommonExeption;
-import com.md.HexoCmdEnum;
+import com.exception.CommonException;
 import org.springframework.core.io.Resource;
 
 /**
  * 定义关于hexo操作的接口
  */
 public interface HexoOPService {
-    Resource getMdFileByName(String name) throws CommonExeption;
 
-    boolean createMd(String name) throws CommonExeption;
+    Resource getOrCreateMd(String name) throws CommonException;
 
     /**
      * 推送hexo源文件到指定的gitlab 仓库
@@ -26,5 +24,5 @@ public interface HexoOPService {
      */
     boolean pullMdPost();
 
-    void upDataMd(String context, String fileName);
+    void upDataMd(String context, String fileName) throws CommonException;
 }

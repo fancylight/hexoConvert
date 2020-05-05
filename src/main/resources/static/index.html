@@ -10,7 +10,7 @@
 <body>
 <div id="layout">
     <header>
-        <h1>编辑器</h1>
+        <h1 id="mdName">编辑器</h1>
     </header>
     <div id="test-editormd">
                 <textarea style="display:none;">
@@ -30,18 +30,66 @@
             path: "/lib/",
             imageUpload: true,
             imageFormats: ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
-            imageUploadURL: "/picUpload"
+            imageUploadURL: "/picUpload",
+            toolbarIcons: function () {
+                var iconArray = editormd.toolbarModes["full"];
+                iconArray.push("getMd");
+                iconArray.push("putMd");
+                return iconArray;
+            },
+            toolbarIconsClass: {
+                getMd: "fa fa-file",
+                putMd: "fa fa-cloud-upload"
+            },
+            toolbarHandlers: {
+                getMd: function (cm, icon, cursor, selection) {
+                    var code = prompt("文档名称");
+                    if (code != undefined || code != "") {
+                        //尝试创建
+                        $.ajax({
+                            type: "post",
+                            url: "/getMd?mdName=" + code,
+                            success: function (data) {
+                                cm.setValue("");
+                                cm.replaceSelection(data);
+                                $("#mdName").text(code);
+                            },
+                            error: function (err) {
+                                alert("错误" + err);
+                            }
+                        })
+                    }
+                },
+                putMd: function (cm, icon, cursor, selection) {
+                    var mdName = $("#mdName").text();
+                    var context = cm.getValue();
+                    var dataJson = {
+                        context: context,
+                        fileName: mdName
+                    };
+                    //提交
+                    $.ajax({
+                        type: "post",
+                        url: "/postMd",
+                        contentType: 'application/json;charset=utf-8',
+                        dataType : "json",
+                        data: JSON.stringify(dataJson),
+                        error: function (err) {
+                            alert("错误" + err);
+                        },
+                        success: function (data) {
+                            echo(data)
+                        }
+                    })
+                }
+            },
+            lang: {
+                toolbar: {
+                    getMd: "修改文档",
+                    putMd: "提交文档"
+                }
+            },
         });
-
-        /*
-        // or
-        testEditor = editormd({
-            id      : "test-editormd",
-            width   : "90%",
-            height  : 640,
-            path    : "../lib/"
-        });
-        */
     });
 </script>
 </body>

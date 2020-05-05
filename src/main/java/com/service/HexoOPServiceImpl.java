@@ -1,7 +1,6 @@
 package com.service;
 
-import com.exception.CommonExeption;
-import com.md.HexoCmdEnum;
+import com.exception.CommonException;
 import com.md.HexoCmdOp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -15,22 +14,13 @@ public class HexoOPServiceImpl implements HexoOPService {
     private HexoCmdOp hexoCmdOp;
 
     @Override
-    public Resource getMdFileByName(String name) throws CommonExeption {
-        Resource resource = hexoCmdOp.getHexoFileByName(name);
-        if (resource == null)
-            throw new CommonExeption(name + "不存在请创建");
-        return resource;
-    }
-
-    @Override
-    public boolean createMd(String name) throws CommonExeption {
+    public Resource getOrCreateMd(String name) throws CommonException {
         try {
-            hexoCmdOp.createHexoMd(name);
+            return hexoCmdOp.createOrGetHexoMd(name);
         } catch (IOException e) {
             e.printStackTrace();
-            throw new CommonExeption("未能正确创建");
+            throw new CommonException("未能正确创建");
         }
-        return true;
     }
 
     @Override
@@ -44,7 +34,7 @@ public class HexoOPServiceImpl implements HexoOPService {
     }
 
     @Override
-    public void upDataMd(String context, String fileName) {
-
+    public void upDataMd(String context, String fileName) throws CommonException {
+        hexoCmdOp.upDataMd(context,fileName);
     }
 }
