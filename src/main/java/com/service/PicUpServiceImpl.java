@@ -1,12 +1,19 @@
 package com.service;
 
+import com.exception.CommonException;
 import org.apache.commons.io.IOUtils;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.validation.Valid;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 /**
  * <h3>hexoConvert</h3>
@@ -16,16 +23,28 @@ import java.io.IOException;
  **/
 @Service
 public class PicUpServiceImpl implements PicUpService {
+    private Log log = LogFactory.getLog(PicUpServiceImpl.class);
     @Value("${pic.dir}")
     private String picDir;
+    @Value("${server.port}")
+    private String port;
+    @Value("${server.local.host}")
+    private String host;
 
     @Override
-    public String upLoad(byte[] pic, String fileName) {
+    public String upLoad(byte[] pic, String fileName) throws CommonException {
+        log.info("开始写入图片" + fileName);
         try {
-            IOUtils.write(pic, new FileOutputStream(picDir + File.separator + fileName + ".png"));
+            OutputStream outputStream = new FileOutputStream(picDir + File.separator + fileName);
+            IOUtils.write(pic, outputStream);
+            outputStream.flush();
+            outputStream.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new CommonException(e.getMessage());
         }
-        return null;
+        //todo:提交后记得处理此处
+        String picAd = "/picUp/" + fileName;
+        log.info("图片地址" + picAd);
+        return picAd;
     }
 }

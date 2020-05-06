@@ -90,8 +90,10 @@ public class HexoCmdOp {
             throw new CommonException(e.getMessage());
         }
         //[3] 执行脚本 hexo g hexo s
+        System.out.println("shutdown hexo");
         String shutDownCmd = "sh " + mdValue.getHexoDir() + File.separator + "sh" + File.separator + "killProcess.sh hexo";
         shExec(shutDownCmd);
+        System.out.println("shutdown hexo end");
         String cmd = "sh " + mdValue.getHexoDir() + File.separator + "sh" + File.separator + "hexoPut.sh ";
         shExec(cmd);
     }
