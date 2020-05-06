@@ -6,6 +6,8 @@ import com.pojo.PicJson;
 import com.pojo.ReturnPojo;
 import com.service.HexoOPService;
 import com.service.PicUpService;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -24,6 +26,7 @@ import java.io.IOException;
  **/
 @Controller
 public class MdController {
+    Log log = LogFactory.getLog(MdController.class);
     @Autowired
     private HexoOPService hexoOPService;
     @Autowired(required = false)
@@ -54,6 +57,7 @@ public class MdController {
     @PostMapping(value = "picUpload", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public PicJson upLoadPic(@RequestPart("editormd-image-file") MultipartFile file) throws IOException {
+        log.info("上传图片");
         return new PicJson(1, "nm$l", picUpService.upLoad(file.getBytes(), file.getName()));
     }
 
