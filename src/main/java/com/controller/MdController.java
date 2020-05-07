@@ -10,14 +10,11 @@ import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.servlet.server.Session;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpCookie;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.Cookie;
@@ -58,6 +55,7 @@ public class MdController {
             response.addCookie(new Cookie("mdCurrent", fileName));
         }
         return resource;
+//        return null;
     }
 
     /**
@@ -71,9 +69,14 @@ public class MdController {
      */
     @PostMapping(value = "picUpload", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public PicJson upLoadPic(@RequestPart("editormd-image-file") MultipartFile file, @CookieValue String mdCurrent) throws IOException, CommonException {
+    public PicJson upLoadPic(@RequestPart("editormd-image-file") MultipartFile file, @CookieValue String mdCurrent) throws
+            IOException, CommonException {
         log.info("上传图片");
-        return new PicJson(1, "nm$l", picUpService.upLoad(file.getBytes(), mdCurrent + "___" + file.getOriginalFilename()));
+        //创建文件夹
+        File file1 = new File(picDir);
+        if (!file1.exists())
+            file1.mkdirs();
+        return new PicJson(1, "nm$l", picUpService.upLoad(file.getBytes(), mdCurrent + "__" + file.getOriginalFilename()));
     }
 
     @PostMapping(value = "postMd", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -86,6 +89,7 @@ public class MdController {
     @RequestMapping(value = "picUp/{fileName}", produces = MediaType.IMAGE_PNG_VALUE)
     @ResponseBody
     public Resource getPic(@PathVariable String fileName) {
+        log.info("获取本机图片---" + picDir + File.separator + fileName);
         return new FileSystemResource(picDir + File.separator + fileName);
     }
 }

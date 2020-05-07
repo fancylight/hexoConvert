@@ -7,13 +7,10 @@ import org.apache.juli.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.validation.Valid;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 /**
  * <h3>hexoConvert</h3>
@@ -33,7 +30,7 @@ public class PicUpServiceImpl implements PicUpService {
 
     @Override
     public String upLoad(byte[] pic, String fileName) throws CommonException {
-        log.info("开始写入图片" + fileName);
+        log.info("开始写入图片" + picDir + File.separator + fileName);
         try {
             OutputStream outputStream = new FileOutputStream(picDir + File.separator + fileName);
             IOUtils.write(pic, outputStream);
