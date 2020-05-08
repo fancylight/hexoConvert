@@ -42,35 +42,36 @@ public class HexoCmdOp {
         String hexoMdDir = mdValue.getHexoSrcDir();
         //初始化
         synchronized (object) {
-            log.info("init-------------");
+            log.info("初始化缓存----------");
             if (mdSet.isEmpty()) {
-
-                Stream.of(new File(hexoBlogDir).listFiles(pathname -> !pathname.isDirectory())).forEach(file -> {
+                Stream.of(new File(hexoMdDir).listFiles(pathname -> !pathname.isDirectory())).forEach(file -> {
                     mdSet.add(file.getAbsolutePath());
                 });
             }
-            log.info("init end-----------");
+            log.info("缓存初始化结束-----------");
         }
+        log.info("当前缓存");
+        mdSet.forEach(System.out::println);
         //尝试获取文档
         String mdName = hexoMdDir + File.separator + name;
-        if (!mdSet.contains(mdName)) {
+        log.info("尝试获取文档");
+        log.info(mdName);
+        System.out.println(mdName);
+        if (!mdSet.contains(mdName + ".md")) {
             synchronized (object) {
-                if (!mdSet.contains(mdName)) { //创建新文件
-                    log.info("shutdown hexo");
+                if (!mdSet.contains(mdName + ".md")) { //创建新文件
+                    log.info("尝试创建新文件" + mdName);
                     String shutDownCmd = "sh " + mdValue.getHexoDir() + File.separator + "sh" + File.separator + "killProcess.sh hexo";
                     shExec(shutDownCmd);
-                    log.info("shutdown hexo end");
-                    log.info("create md file------------");
                     String cmd = "sh " + hexoBlogDir + File.separator + "sh" + File.separator + "hexoNew.sh " + name;
-                    log.info(cmd);
                     shExec(cmd);
-                    mdSet.add(mdName);
-                    log.info("create md file end------------");
+                    mdSet.add(mdName + ".md");
+                    log.info("创建文件结束");
                 }
             }
         }
         //返回md文件
-        log.info("get md file-----------" + mdName);
+        log.info("尝试获取文件" + mdName);
         return replaceHexoPicLinkToLocal(new FileSystemResource(mdName + ".md"), name);
     }
 
@@ -145,11 +146,11 @@ public class HexoCmdOp {
             throw new CommonException(e.getMessage());
         }
         //[3] 执行脚本 hexo g hexo s
-        log.info("shutdown hexo");
         String shutDownCmd = "sh " + mdValue.getHexoDir() + File.separator + "sh" + File.separator + "killProcess.sh hexo";
         shExec(shutDownCmd);
-        log.info("shutdown hexo end");
+        log.info("尝试上传文档到hexo");
         String cmd = "sh " + mdValue.getHexoDir() + File.separator + "sh" + File.separator + "hexoPut.sh ";
+        log.info("上传结束");
         shExec(cmd);
     }
 
@@ -212,14 +213,18 @@ public class HexoCmdOp {
     }
 
     private void shExec(String sh) {
+        log.info("执行--" + sh + "--开始");
         try {
             Process process = Runtime.getRuntime().exec(sh);
-            log.info("process.waitFor:" + process.waitFor());
+            int code = process.waitFor();
+            boolean success = false;
             if (process.waitFor() == 0) {// 0 表示线程正常终止。
-                log.info("线程正常");
+                success = true;
             }
             log.info(new String(IOUtils.toByteArray(process.getInputStream()), "UTF-8"));
             log.info(new String(IOUtils.toByteArray(process.getErrorStream()), "UTF-8"));
+            log.info("执行--" + sh + "结束,执行正常" + success);
+            log.info("状态码:" + code);
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }

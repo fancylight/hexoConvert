@@ -44,7 +44,7 @@
             toolbarHandlers: {
                 getMd: function (cm, icon, cursor, selection) {
                     var code = prompt("文档名称");
-                    if (code != undefined || code != "") {
+                    if (code != undefined && code != "" && code != null) {
                         //尝试创建
                         $.ajax({
                             type: "post",
@@ -72,7 +72,7 @@
                         type: "post",
                         url: "/postMd",
                         contentType: 'application/json;charset=utf-8',
-                        dataType : "json",
+                        dataType: "json",
                         data: JSON.stringify(dataJson),
                         error: function (err) {
                             alert("错误" + err);

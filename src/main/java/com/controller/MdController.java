@@ -50,12 +50,13 @@ public class MdController {
     @PostMapping(value = "getMd", produces = MediaType.TEXT_PLAIN_VALUE)
     @ResponseBody
     public Resource getMd(@RequestParam(value = "mdName") String fileName, HttpServletResponse response) throws CommonException {
+        if (fileName == null || fileName.equals(""))
+            throw new CommonException("fileName不应为空");
         Resource resource = hexoOPService.getOrCreateMd(fileName);
         if (resource.isReadable()) {
             response.addCookie(new Cookie("mdCurrent", fileName));
         }
         return resource;
-//        return null;
     }
 
     /**
