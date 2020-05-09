@@ -1389,7 +1389,6 @@
 					}).show();
 
 			infoDialog.css("z-index", editormd.dialogZindex).show();
-
 			this.infoDialogPosition();
 
             return this;

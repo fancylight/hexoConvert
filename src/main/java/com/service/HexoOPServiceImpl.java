@@ -7,6 +7,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 public class HexoOPServiceImpl implements HexoOPService {
@@ -14,13 +15,13 @@ public class HexoOPServiceImpl implements HexoOPService {
     private HexoCmdOp hexoCmdOp;
 
     @Override
-    public Resource getOrCreateMd(String name) throws CommonException {
-        try {
-            return hexoCmdOp.createOrGetHexoMd(name);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new CommonException("未能正确创建");
-        }
+    public List<String> getExistMd() {
+        return hexoCmdOp.getExistMd();
+    }
+
+    @Override
+    public Resource createMd(String name) throws CommonException {
+        return hexoCmdOp.createOrGetHexoMd(name);
     }
 
     @Override
@@ -35,6 +36,12 @@ public class HexoOPServiceImpl implements HexoOPService {
 
     @Override
     public void upDataMd(String context, String fileName) throws CommonException {
-        hexoCmdOp.upDataMd(context,fileName);
+        hexoCmdOp.upDataMd(context, fileName);
     }
+
+    @Override
+    public Resource getMd(String mdName) throws CommonException {
+        return hexoCmdOp.getMdByName(mdName);
+    }
+
 }

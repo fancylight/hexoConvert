@@ -18,10 +18,10 @@
     </div>
 </div>
 <script src="/js/jquery-3.5.0.min.js"></script>
-<script src="/js/editormd.min.js"></script>
+<script src="/js/editormd.js"></script>
 <script type="text/javascript">
-    var testEditor;
 
+    var testEditor;
     $(function () {
         testEditor = editormd("test-editormd", {
             width: "90%",
@@ -35,27 +35,32 @@
                 var iconArray = editormd.toolbarModes["full"];
                 iconArray.push("getMd");
                 iconArray.push("putMd");
+                iconArray.push("listMd");
                 return iconArray;
             },
             toolbarIconsClass: {
                 getMd: "fa fa-file",
-                putMd: "fa fa-cloud-upload"
+                putMd: "fa fa-cloud-upload",
+                listMd: "fas fa-align-justify"
             },
             toolbarHandlers: {
                 getMd: function (cm, icon, cursor, selection) {
                     var code = prompt("文档名称");
                     if (code != undefined && code != "" && code != null) {
                         //尝试创建
+                        testEditor.lockScreen(true);
                         $.ajax({
                             type: "post",
-                            url: "/getMd?mdName=" + code,
+                            url: "/createMd?mdName=" + code,
                             success: function (data) {
                                 cm.setValue("");
                                 cm.replaceSelection(data);
                                 $("#mdName").text(code);
+                                testEditor.lockScreen(false);
                             },
                             error: function (err) {
                                 alert("错误" + err);
+                                testEditor.lockScreen(false);
                             }
                         })
                     }
@@ -68,6 +73,7 @@
                         fileName: mdName
                     };
                     //提交
+                    testEditor.lockScreen(true);
                     $.ajax({
                         type: "post",
                         url: "/postMd",
@@ -76,21 +82,114 @@
                         data: JSON.stringify(dataJson),
                         error: function (err) {
                             alert("错误" + err);
+                            testEditor.lockScreen(false);
                         },
                         success: function (data) {
-                            echo(data)
+                            testEditor.lockScreen(false);
                         }
                     })
+                },
+                listMd: function (cm, icon, cursor, selection) {
+                    showListMdDialog();
                 }
             },
             lang: {
                 toolbar: {
-                    getMd: "修改文档",
-                    putMd: "提交文档"
+                    getMd: "新建文档",
+                    putMd: "提交文档",
+                    listMd: "列出文档"
                 }
             },
         });
     });
+
+    //定义一个显示下拉框页面的代码
+    function createListMdDialog() {
+        var _this = testEditor;
+        var editor = testEditor.editor;
+        var classPrefix = testEditor.classPrefix;
+        var infoDialogHTML = [
+            "<div class=\"" + classPrefix + "dialog " + classPrefix + "listMdSelect\" style=\"\">",
+            "<div class=\"" + classPrefix + "dialog-container\">",
+            "<div class=\"container\">",
+            "<select id='listMdSelect' class = \"listMdSelect\">",
+            "</div>",
+            "</select>",
+            "<a href=\"javascript:;\" class=\"fa fa-close " + classPrefix + "dialog-close\"></a>",
+            "</div>",
+            "</div>"
+        ].join("\n");
+        editor.append(infoDialogHTML);
+        var listMdDialog = _this.listMdDialog = editor.children("." + classPrefix + "listMdSelect");
+        //点击事件
+        listMdDialog.find("." + classPrefix + "dialog-close").bind(editormd.mouseOrTouch("click", "touchend"), function () {
+            $("html,body").css("overflow-x", "");
+            _this.listMdDialog.hide();
+            _this.mask.hide();
+            _this.lockScreen(false);
+            //获取勾选的md
+            var selectOption = $("#listMdSelect option:selected").html();
+            if (selectOption != null && selectOption != undefined) {
+                var mdName = selectOption;
+                $.ajax({
+                    url: "getMd?mdName=" + mdName,
+                    type: "post",
+                    success: function (data) {
+                        _this.setValue("");
+                        _this.replaceSelection(data);
+                        $("#mdName").text(mdName);
+                    }
+                })
+            } else {
+                alert("请选择正确的md")
+            }
+            return _this;
+        });
+        listMdDialog.css("border", (editormd.isIE8) ? "1px solid #ddd" : "").css("z-index", editormd.dialogZindex).show();
+    }
+
+
+    function showListMdDialog() {
+        var _this = testEditor;
+        var editor = testEditor.editor;
+        var settings = testEditor.settings;
+        var listMdSelect = testEditor.infoDialog = editor.children("." + _this.classPrefix + "listMdSelect");
+        // 创建对话框
+        if (listMdSelect.length < 1) {
+            createListMdDialog();
+        }
+        //动态创建一个页面
+        $.ajax({
+            url: "getListMd",
+            type: "post",
+            success: function (data) {
+                //遍历data
+                var mdList = data.mdList;
+                //清除
+                $("#listMdSelect").empty();
+                $.each(mdList, function (index, value) {
+                    $("#listMdSelect").append("<option value=\"" + index + "\">" + value + "</option>");
+                })
+            }
+        });
+        //背景
+        _this.lockScreen(true);
+        _this.mask.css({
+            opacity: settings.dialogMaskOpacity,
+            backgroundColor: settings.dialogMaskBgColor
+        }).show();
+
+        //定位
+        _this.listMdDialog.css("z-index", editormd.dialogZindex).show();
+        var _infoDialogPosition = function () {
+            _this.listMdDialog.css({
+                top: ($(window).height() - _this.listMdDialog.height()) / 2 + "px",
+                left: ($(window).width() - _this.listMdDialog.width()) / 2 + "px"
+            });
+        };
+        _infoDialogPosition();
+        $(window).resize(_infoDialogPosition);
+    }
 </script>
 </body>
 </html>

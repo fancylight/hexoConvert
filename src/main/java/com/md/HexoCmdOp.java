@@ -17,46 +17,42 @@ import org.springframework.stereotype.Component;
 import java.io.*;
 import java.net.URI;
 import java.net.URL;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Component
 public class HexoCmdOp {
     @Autowired
     private MdValue mdValue;
-    private ConcurrentSkipListSet mdSet = new ConcurrentSkipListSet();
+    private ConcurrentSkipListSet<String> mdSet = new ConcurrentSkipListSet();
     private Object object = new Object();
     @Value("${pic.dir}")
     private String picUPLoadDir;
     private Log log = LogFactory.getLog(HexoCmdOp.class);
 
     /**
-     * 创建新的md文件或获取已经存在的md
+     * 创建新的md文件
      *
      * @param name
      */
-    public Resource createOrGetHexoMd(String name) throws IOException {
+    public Resource createOrGetHexoMd(String name) throws CommonException {
         String hexoBlogDir = mdValue.getHexoDir();
         String hexoMdDir = mdValue.getHexoSrcDir();
-        //初始化
-        synchronized (object) {
-            log.info("初始化缓存----------");
-            if (mdSet.isEmpty()) {
-                Stream.of(new File(hexoMdDir).listFiles(pathname -> !pathname.isDirectory())).forEach(file -> {
-                    mdSet.add(file.getAbsolutePath());
-                });
-            }
-            log.info("缓存初始化结束-----------");
+        //todo:暂时初始化,完成列表功能后删除
+        List<String> list = getExistMd();
+        if (list.contains(name)) {
+            throw new CommonException("已存在md" + name + "请不要重复创建");
         }
-        log.info("当前缓存");
-        mdSet.forEach(System.out::println);
+        log.info("存在的文档");
+        list.forEach(System.out::println);
         //尝试获取文档
         String mdName = hexoMdDir + File.separator + name;
         log.info("尝试获取文档");
         log.info(mdName);
-        System.out.println(mdName);
         if (!mdSet.contains(mdName + ".md")) {
             synchronized (object) {
                 if (!mdSet.contains(mdName + ".md")) { //创建新文件
@@ -72,7 +68,8 @@ public class HexoCmdOp {
         }
         //返回md文件
         log.info("尝试获取文件" + mdName);
-        return replaceHexoPicLinkToLocal(new FileSystemResource(mdName + ".md"), name);
+        Resource resource = getMdByName(name);
+        return resource;
     }
 
     /**
@@ -143,7 +140,7 @@ public class HexoCmdOp {
             IOUtils.write(context, new FileSystemResource(md).getOutputStream());
             log.info("上传编辑器md到hexo目录结束");
         } catch (IOException e) {
-            throw new CommonException(e.getMessage());
+            throw new CommonException(e.getMessage() + "不存在");
         }
         //[3] 执行脚本 hexo g hexo s
         String shutDownCmd = "sh " + mdValue.getHexoDir() + File.separator + "sh" + File.separator + "killProcess.sh hexo";
@@ -228,5 +225,41 @@ public class HexoCmdOp {
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 获取当前存在的文档,并初始化缓存
+     *
+     * @return 所有文档名
+     */
+    public List<String> getExistMd() {
+        String hexoMdDir = mdValue.getHexoSrcDir();
+        if (mdSet.isEmpty()) {
+            synchronized (object) {
+                log.info("初始化缓存----------");
+                if (mdSet.isEmpty()) {
+                    Stream.of(new File(hexoMdDir).listFiles(pathname -> !pathname.isDirectory())).forEach(file -> mdSet.add(file.getAbsolutePath()));
+                }
+                log.info("缓存初始化结束-----------");
+            }
+        }
+        //返回文档名 stream 和lambda jdk14 jdk8
+        return mdSet.stream().map(absolutePath -> absolutePath.substring(absolutePath.lastIndexOf(File.separator) + 1, absolutePath.lastIndexOf("."))).
+                collect(Collectors.toList());
+    }
+
+    /**
+     * @param mdName 文档名
+     * @return 文档
+     */
+    public Resource getMdByName(String mdName) throws CommonException {
+        String hexoMdDir = mdValue.getHexoSrcDir();
+        Resource resource;
+        try {
+            resource = replaceHexoPicLinkToLocal(new FileSystemResource(hexoMdDir + File.separator + mdName + ".md"), mdName);
+        } catch (IOException e) {
+            throw new CommonException(e.getMessage());
+        }
+        return resource;
     }
 }
