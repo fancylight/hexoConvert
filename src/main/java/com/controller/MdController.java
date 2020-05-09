@@ -24,9 +24,6 @@ import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * <h3>hexoConvert</h3>
@@ -107,8 +104,7 @@ public class MdController {
     @PostMapping(value = "getListMd", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public MdCountJsonPojo getListMd() {
-//        List<String> mds = hexoOPService.getExistMd();
-        List<String> mds = Stream.of("123","234234234").collect(Collectors.toList());
+        List<String> mds = hexoOPService.getExistMd();
         MdCountJsonPojo mdCountJsonPojo = new MdCountJsonPojo();
         if (mds.size() > 0) {
             mdCountJsonPojo.setStatus("正常");
@@ -128,7 +124,11 @@ public class MdController {
      */
     @PostMapping(value = "getMd", produces = MediaType.TEXT_PLAIN_VALUE)
     @ResponseBody
-    public Resource getMd(@RequestParam("mdName") String mdName) throws CommonException {
-        return hexoOPService.getMd(mdName);
+    public Resource getMd(@RequestParam("mdName") String mdName, HttpServletResponse response) throws CommonException {
+        Resource resource = hexoOPService.getMd(mdName);
+        if (resource.isReadable()) {
+            response.addCookie(new Cookie("mdCurrent", mdName));
+        }
+        return resource;
     }
 }

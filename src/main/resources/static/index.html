@@ -6,6 +6,9 @@
     <link rel="stylesheet" href="/css/style.css"/>
     <link rel="stylesheet" href="/css/editormd.css"/>
     <link rel="shortcut icon" href="https://pandao.github.io/editor.md/favicon.ico" type="image/x-icon"/>
+    <link href="loadPlugin/css/select-mania.css" rel="stylesheet" type="text/css">
+    <link href="loadPlugin/css/themes/select-mania-theme-red.css" rel="stylesheet" type="text/css">
+    <link href="loadPlugin/css/themes/select-mania-theme-square.css" rel="stylesheet" type="text/css">
 </head>
 <body>
 <div id="layout">
@@ -19,6 +22,7 @@
 </div>
 <script src="/js/jquery-3.5.0.min.js"></script>
 <script src="/js/editormd.js"></script>
+<script type="text/javascript" src="loadPlugin/js/select-mania.js"></script>
 <script type="text/javascript">
 
     var testEditor;
@@ -170,6 +174,13 @@
                 $.each(mdList, function (index, value) {
                     $("#listMdSelect").append("<option value=\"" + index + "\">" + value + "</option>");
                 })
+                $('.listMdSelect').selectMania({
+                    size: 'small',
+                    themes: ['square', 'red'],
+                    placeholder: '请选择一个md查看!',
+                    removable: true,
+                    search: true,
+                });
             }
         });
         //背景
